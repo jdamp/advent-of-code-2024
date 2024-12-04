@@ -30,34 +30,45 @@ func parseInput(input string) ([][]int, error) {
 	return reports, nil
 }
 
-func safeDiff(i int) bool {
-	abs := util.Abs(i)
-	return abs <= 3 && abs > 0
+func validateLevel(level []int) bool {
+	diffs, _ := util.IntSliceDiff(level[1:], level[:len(level)-1])
+	isInc := util.Map(diffs, func(i int) bool { return 3 >= i && i > 0 })
+	isDec := util.Map(diffs, func(i int) bool { return -3 <= i && i < 0 })
+	return util.All(isInc) || util.All(isDec)
+}
+
+func validateWithRemoval(level []int) bool {
+	for i := 0; i < len(level); i++ {
+		levelWithOut := append([]int{}, level[:i]...)
+		levelWithOut = append(levelWithOut, level[i+1:]...)
+		if validateLevel(levelWithOut) {
+			return true
+		}
+	}
+	return false
 }
 
 func part1(input string) (count int) {
 	levels, _ := parseInput(input)
-	// Do we have to check whehter the level is decreasing?
-
 	for _, level := range levels {
-		diffs, _ := util.IntSliceDiff(level[1:], level[:len(level)-1])
-		inc := util.Map(diffs, func(i int) bool { return i > 0 })
-		safeDiff := util.Map(diffs, safeDiff)
-		check1 := util.All(inc) || !util.Any(inc)
-		check2 := util.All(safeDiff)
-		if check1 && check2 {
+		if validateLevel(level) {
 			count += 1
 		}
-
 	}
 	return count
 }
 
-func part2(input string) int {
-	// Like part 1, but allow at least one unsafe level
+func part2(input string) (count int) {
 	levels, _ := parseInput(input)
-	return levels[0][0]
-
+	for _, level := range levels {
+		// Like part 1, but allow at least one unsafe level
+		// 1000 input lines with only a few numbers per line, so the brute-force approach
+		// should be sufficient
+		if validateLevel(level) || validateWithRemoval(level) {
+			count += 1
+		}
+	}
+	return count
 }
 
 func main() {

@@ -21,7 +21,25 @@ func part1(input string) (result int) {
 
 	}
 	return result
+}
 
+func part2(input string) (result int) {
+	re := regexp.MustCompile(`mul\((\d+),(\d+)\)|do\(\)|don't\(\)`)
+	matches := re.FindAllStringSubmatch(input, -1)
+	mul := 1 // 1 if enabled 0 if disabled
+	for _, match := range matches {
+		if match[0] == "do()" {
+			mul = 1
+			continue
+		} else if match[0] == "don't()" {
+			mul = 0
+			continue
+		}
+		first, _ := strconv.Atoi(match[1])
+		second, _ := strconv.Atoi(match[2])
+		result += mul * first * second
+	}
+	return result
 }
 
 func main() {
@@ -32,7 +50,7 @@ func main() {
 		result := part1(input)
 		fmt.Println("Result: ", result)
 	} else {
-		result := 0 //part2(input)
+		result := part2(input)
 		fmt.Println("Result: ", result)
 	}
 

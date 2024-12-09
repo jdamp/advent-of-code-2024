@@ -1,5 +1,11 @@
 package util
 
+import (
+	"fmt"
+
+	"gonum.org/v1/gonum/mat"
+)
+
 type Grid[T any] struct {
 	data [][]T
 }
@@ -77,4 +83,28 @@ func (grid *Grid[T]) ReverseCols() *Grid[T] {
 // Rotate90Clockwise rotates the Grid 90 degrees clockwise.
 func (grid *Grid[T]) Rotate90Clockwise() *Grid[T] {
 	return grid.Transpose().ReverseCols()
+}
+
+// IsValid checks if a vector is within the bounds of a Grid
+func (g *Grid[T]) IsValid(x, y int) bool {
+	return (0 <= x && x < g.GetNumCols() && 0 <= y && y < g.GetNumRows())
+
+}
+
+// IsValid checks if a vector is within the bounds of a Grid
+func (g *Grid[T]) IsVecValid(v *mat.VecDense) bool {
+	x := int(v.AtVec(0))
+	y := int(v.AtVec(1))
+	return g.IsValid(x, y)
+
+}
+
+// Print displays the Grid in the terminal
+func (g *Grid[T]) Print() {
+	for _, row := range g.data {
+		for _, cell := range row {
+			fmt.Print(cell)
+		}
+		fmt.Println()
+	}
 }

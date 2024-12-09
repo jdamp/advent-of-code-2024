@@ -4,7 +4,6 @@ import (
 	_ "embed"
 	"flag"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/jdamp/advent-of-code-2024/util"
@@ -22,34 +21,10 @@ type State struct {
 	obstacles map[string]bool
 }
 
-// Since go doesn't have a set type, we'll use a map to store the unique visited coordinates
-// again. vecToKey converts a vector into a string key for the visited and obstacles map
-func vecToKey(vec *mat.VecDense) string {
-	var builder strings.Builder
-	for _, val := range vec.RawVector().Data {
-		builder.WriteString(fmt.Sprintf("%d,", int(val)))
-	}
-	return builder.String()
-}
-
-func keyToVec(key string) *mat.VecDense {
-	parts := strings.Split(key, ",")
-	data := make([]float64, 2)
-	for i, part := range parts {
-		val, _ := strconv.Atoi(part)
-		data[i] = float64(val)
-	}
-	return mat.NewVecDense(len(data), data)
-}
-
 func (s *State) inBound() bool {
 	x := s.position.AtVec(0)
 	y := s.position.AtVec(1)
 	return (0 <= x && x <= float64(s.xmax)) && (0 <= y && y <= float64(s.ymax))
-}
-
-func asVector(x, y int) *mat.VecDense {
-	return mat.NewVecDense(2, []float64{float64(x), float64(y)})
 }
 
 func parseInput(input string) State {
@@ -63,10 +38,10 @@ func parseInput(input string) State {
 		for y := 0; y <= state.ymax; y++ {
 			sym := rows[y][x]
 			if sym == '^' {
-				state.position = asVector(x, y)
-				state.velocity = asVector(0, -1)
+				state.position = util.AsVector(x, y)
+				state.velocity = util.AsVector(0, -1)
 			} else if sym == '#' {
-				state.obstacles[vecToKey(asVector(x, y))] = true
+				state.obstacles[util.VecToKey(util.AsVector(x, y))] = true
 			}
 		}
 	}
@@ -83,7 +58,7 @@ func rotate(velocity *mat.VecDense) *mat.VecDense {
 func simulatePart1(state *State) map[string]bool {
 	visited := map[string]bool{}
 	for state.inBound() {
-		visited[vecToKey(state.position)] = true
+		visited[util.VecToKey(state.position)] = true
 		simulateStep(state, state.obstacles)
 	}
 	return visited
@@ -95,7 +70,7 @@ func simulatePart2(state *State, originalPath map[string]bool) int {
 	// Try placing an obstruction at each position in the path
 	for pos := range originalPath {
 		// Skip the starting position
-		if pos == vecToKey(state.position) {
+		if pos == util.VecToKey(state.position) {
 			continue
 		}
 
@@ -116,8 +91,8 @@ func causesLoop(state *State, obstacles map[string]bool) bool {
 	simulationState := *state
 
 	for simulationState.inBound() {
-		positionKey := vecToKey(simulationState.position)
-		velocityKey := vecToKey(simulationState.velocity)
+		positionKey := util.VecToKey(simulationState.position)
+		velocityKey := util.VecToKey(simulationState.velocity)
 
 		// Detect loop: the same position and velocity revisited
 		if visited[positionKey] == velocityKey {
@@ -138,7 +113,7 @@ func causesLoop(state *State, obstacles map[string]bool) bool {
 
 func simulateStep(state *State, obstacles map[string]bool) bool {
 	newPosition := mat.NewVecDense(2, nil)
-	initialVelocity := vecToKey(state.velocity)
+	initialVelocity := util.VecToKey(state.velocity)
 
 	for {
 		newPosition.AddVec(state.position, state.velocity)
@@ -150,14 +125,14 @@ func simulateStep(state *State, obstacles map[string]bool) bool {
 		state.velocity = rotate(state.velocity)
 
 		// If velocity cycles back to the original without moving, the guard is stuck
-		if vecToKey(state.velocity) == initialVelocity {
+		if util.VecToKey(state.velocity) == initialVelocity {
 			return false
 		}
 	}
 }
 
 func isObstacle(position *mat.VecDense, obstacles map[string]bool) bool {
-	_, exists := obstacles[vecToKey(position)]
+	_, exists := obstacles[util.VecToKey(position)]
 	return exists
 }
 

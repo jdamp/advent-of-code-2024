@@ -25,3 +25,11 @@ func SliceAsKey(vals []int) string {
 	}
 	return result
 }
+
+func InsertOrIncrementByValue[K comparable](m map[K]int, key K, val int) {
+	if _, ok := m[key]; !ok {
+		m[key] = val
+	} else {
+		m[key] += val
+	}
+}

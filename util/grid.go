@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"strings"
 
 	"gonum.org/v1/gonum/mat"
 )
@@ -15,6 +16,19 @@ func NewGrid[T any](data [][]T) *Grid[T] {
 	return &Grid[T]{data: data}
 }
 
+// NewGridFromMultiLineString creates a new Grid from a multi-line string
+func NewGridFromMultiLineString(s string) *Grid[string] {
+	lines := strings.Split(s, "\n")
+	data := make2DSlice[string](len(lines), len(lines[0]))
+
+	for i, line := range lines {
+		for j, char := range line {
+			data[i][j] = string(char)
+		}
+	}
+	return NewGrid(data)
+}
+
 // make2DSlice creates a nRows x mCols slice
 func make2DSlice[T any](n int, m int) [][]T {
 	newLike := make([][]T, n)
@@ -22,6 +36,19 @@ func make2DSlice[T any](n int, m int) [][]T {
 		newLike[i] = make([]T, m)
 	}
 	return newLike
+}
+
+// NewLike creates a new Grid with the same dimensions as the original Grid filled with a value
+func NewConstLike[T, U any](grid *Grid[T], value U) *Grid[U] {
+	n := grid.GetNumRows()
+	m := grid.GetNumCols()
+	data := make2DSlice[U](n, m)
+	for i := 0; i < n; i++ {
+		for j := 0; j < m; j++ {
+			data[i][j] = value
+		}
+	}
+	return NewGrid(data)
 }
 
 func (grid *Grid[T]) GetNumRows() int {
@@ -34,6 +61,10 @@ func (grid *Grid[T]) GetNumCols() int {
 
 func (grid *Grid[T]) Get(i, j int) T {
 	return grid.data[i][j]
+}
+
+func (grid *Grid[T]) Set(i, j int, value T) {
+	grid.data[i][j] = value
 }
 
 func (grid *Grid[T]) GetData() [][]T {
